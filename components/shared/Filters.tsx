@@ -1,3 +1,5 @@
+'use client';
+
 import React, { FC } from "react";
 import { Title } from "./Title";
 import { FilterCheckbox } from "./FilterCheckbox";
@@ -13,7 +15,7 @@ export const Filters: FC<Props> = ({ className }) => {
 	return (
 		<div className={className}>
 			<Title text="Фильтрация" size="sm" className="mb-5 font-bold" />
-			<div className="flex flex-col gap-4">
+			<div className="flex flex-col gap-4 mb-5">
 				<FilterCheckbox text="Можно собирать" value="1" />
 				<FilterCheckbox text="Новинки" value="2" />
 			</div>
