@@ -1,0 +1,126 @@
+// Указываем с каким файлом будем работать
+generator client {
+    provider = "prisma-client-js"
+}
+
+//Указываем базу данных
+datasource db {
+    provider  = "postgresql"
+    url       = env("POSTGRES_URL")
+    directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+//$ npx prisma db push - что бы запушить модели
+
+//Создаем таблицы
+model User {
+    id Int @id @default(autoincrement()) //название поля - тип данных - уникальный id, инкремент на + 1 по умолчанию
+
+    fullName String
+    email    String @unique
+    password String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    cart  Cart[]
+    orders Order[]
+}
+
+model Category {
+    id Int @id @default(autoincrement())
+
+    name     String    @unique
+    products Product[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Product {
+    id Int @id @default(autoincrement())
+
+    name     String
+    imageUrl String
+
+    //Будем искать в таблице Category id соответствующий categoryId продукта, в бд не хранится
+    category   Category @relation(fields: [categoryId], references: [id])
+    categoryId Int // Будем хранится в БД, его будем доставать
+
+    productItem ProductItem[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model ProductItem {
+    id Int @id @default(autoincrement())
+
+    price         Int
+    size          Int? // Может не быть не указан
+    packagingType String?
+
+    product   Product    @relation(fields: [productId], references: [id])
+    productId Int
+    cartItems   CartItem[]
+}
+
+model Cart {
+    id Int @id @default(autoincrement())
+
+    user   User? @relation(fields: [userId], references: [id])
+    userId Int?
+
+    items CartItem[]
+
+    token String? //Корзина может быть у незарегестрированного пользователя
+
+    totalAmount Int @default(0)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model CartItem {
+    id Int @id @default(autoincrement())
+
+    cart   Cart @relation(fields: [cartItemId], references: [id])
+    cartItemId Int
+
+    productItem   ProductItem @relation(fields: [productItemId], references: [id])
+    productItemId Int
+
+    quantity      Int
+    // size          Int?
+    // packagingType String?
+}
+
+model Order {
+    id Int @id @default(autoincrement())
+
+    user User? @relation(fields: [userId], references: [id])
+    userId Int?
+
+    token String
+
+    totalAmount Int
+    status Status
+    paymentId String?
+
+    items Json
+
+    fullName String
+    email    String
+    address String
+    phone String
+    comment String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+enum Status {
+    PENDING
+    SUCCEEDED
+    CANCELED
+}
