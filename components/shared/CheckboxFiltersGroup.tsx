@@ -3,18 +3,22 @@
 import React, { FC, useState } from "react";
 import { FilterChecboxProps, FilterCheckbox } from "./FilterCheckbox";
 import { Input } from "../ui";
+import { Skeleton } from "../ui/skeleton";
 
 type Item = FilterChecboxProps;
 
 interface Props {
 	title: string;
 	items: Item[];
-	defaultItems: Item[];
+	defaultItems?: Item[];
 	limit?: number;
+	loading?: boolean;
 	searchInputPlaceholder?: string;
-	onChange: (values: string[]) => void;
-	defaultValue: string;
+	onClickCheckbox?: (id: string) => void;
+	defaultValue?: string[];
+	selected?: Set<string>;
 	className?: string;
+	name?: string;
 }
 
 export const CheckboxFiltersGroup: FC<Props> = ({
@@ -22,19 +26,37 @@ export const CheckboxFiltersGroup: FC<Props> = ({
 	items,
 	defaultItems,
 	limit = 5,
+	loading,
 	searchInputPlaceholder = "Поиск...",
 	className,
-	onChange,
 	defaultValue,
+	onClickCheckbox,
+	selected,
+	name
 }) => {
 	const [showAll, setShowAll] = useState(false);
-    const [search, setSearch] = useState("");
+	const [search, setSearch] = useState("");
 
-	const list = showAll ? items.filter(item => item.text.toLowerCase().includes(search.toLowerCase())) : defaultItems.slice(0, limit);
+	const list = showAll
+		? items.filter((item) => item.text.toLowerCase().includes(search.toLowerCase()))
+		: (defaultItems || items).slice(0, limit);
 
 	const onChangeSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setSearch(e.target.value);
 	};
+
+	if (loading) {
+		return (
+			<div className={className}>
+				<p className="font-bold mb-3">{title}</p>
+
+				{...new Array(limit)
+					.fill(0)
+					.map((_, index) => <Skeleton key={index} className="h-6 mb-4 rounded-[8px]" />)}
+				<Skeleton className="w-28 h-6 mb-4 rounded-[8px]" />
+			</div>
+		);
+	}
 
 	return (
 		<div className={className}>
@@ -55,8 +77,9 @@ export const CheckboxFiltersGroup: FC<Props> = ({
 						text={item.text}
 						value={item.value}
 						endAdornment={item.endAdornment}
-						checked={false}
-						onCheckedChange={(ids) => console.log(ids)}
+						checked={selected?.has(item.value)}
+						onCheckedChange={() => onClickCheckbox?.(item.value)}
+						name={name}
 					/>
 				))}
 			</div>
